@@ -1,113 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
-
-func main() {
-	test_interpreter()
-}
-
-func test_interpreter() {
-	interpreter, err := ioutil.ReadFile("../compiled.bf")
-	//interpreter, err := ioutil.ReadFile("../commented.bf")
-	if err != nil {
-		panic(err)
-	}
-	tests, err := filepath.Glob("../Tests/*.in")
-	if err != nil {
-		panic(err)
-	}
-testLoop:
-	for i := range tests {
-		buffer := bytes.Buffer{}
-		input, err := ioutil.ReadFile(tests[i])
-		if err != nil {
-			panic(err)
-		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
-		if err != nil {
-			panic(err)
-		}
-		for i := range input {
-			if input[i] == '!' {
-				input[i] = 0
-			}
-		}
-		Interpret(interpreter, append(input, 0), &buffer)
-		bufferbytes := buffer.Bytes()
-		if len(bufferbytes) != len(output) {
-			fmt.Printf(
-				"Failed %s\n\t(got \"%s\", wanted \"%s\")\n",
-				tests[i],
-				string(bufferbytes),
-				string(output),
-			)
-		} else {
-			for i := range bufferbytes {
-				if bufferbytes[i] != output[i] {
-					fmt.Printf(
-						"Failed %s\n\t(got \"%s\", wanted \"%s\")\n",
-						tests[i],
-						string(bufferbytes),
-						string(output),
-					)
-					continue testLoop
-				}
-			}
-			fmt.Printf("Succeeded %s\n", tests[i])
-		}
-	}
-	fmt.Println("Meta Tests")
-metaLoop:
-	for i := range tests {
-		buffer := bytes.Buffer{}
-		input, err := ioutil.ReadFile(tests[i])
-		if err != nil {
-			panic(err)
-		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
-		if err != nil {
-			panic(err)
-		}
-		for i := range input {
-			if input[i] == '!' {
-				input[i] = 0
-			}
-		}
-		interpreter = append(interpreter, 0)
-		input = append(interpreter, input...)
-		Interpret(interpreter, append(input, 0), &buffer)
-		bufferbytes := buffer.Bytes()
-		if len(bufferbytes) != len(output) {
-			fmt.Printf(
-				"Failed %s\n\t(got \"%s\", wanted \"%s\")\n",
-				tests[i],
-				string(bufferbytes),
-				string(output),
-			)
-		} else {
-			for i := range bufferbytes {
-				if bufferbytes[i] != output[i] {
-					fmt.Printf(
-						"Failed %s\n\t(got \"%s\", wanted \"%s\")\n",
-						tests[i],
-						string(bufferbytes),
-						string(output),
-					)
-					continue metaLoop
-				}
-			}
-			fmt.Printf("Succeeded %s\n", tests[i])
-		}
-	}
-}
 
 func Interpret(program []byte, input []byte, output io.Writer) {
 	memory := make(map[int]byte)
@@ -115,21 +13,21 @@ func Interpret(program []byte, input []byte, output io.Writer) {
 	memoryPointer := 0
 	scope := 0
 	for programPointer < len(program) {
-		switch string(program[programPointer]) {
-		case "+":
+		switch program[programPointer] {
+		case '+':
 			memory[memoryPointer] += 1
-		case "-":
+		case '-':
 			memory[memoryPointer] -= 1
-		case "<":
+		case '<':
 			memoryPointer--
-		case ">":
+		case '>':
 			memoryPointer++
-		case "[":
+		case '[':
 			if memory[memoryPointer] == 0 {
 				for depth := 1; depth > 0; {
 					programPointer++
 					if programPointer >= len(program) {
-						fmt.Println("\nScope Error")
+						fmt.Fprintln(output, "\nScope Error.")
 						return
 					}
 					c := program[programPointer]
@@ -142,12 +40,12 @@ func Interpret(program []byte, input []byte, output io.Writer) {
 			} else {
 				scope++
 			}
-		case "]":
+		case ']':
 			if memory[memoryPointer] != 0 {
 				for depth := 1; depth > 0; {
 					programPointer--
 					if programPointer < 0 {
-						fmt.Println("\nScope Error")
+						fmt.Fprintln(output, "\nScope Error.")
 						return
 					}
 					c := program[programPointer]
@@ -160,20 +58,20 @@ func Interpret(program []byte, input []byte, output io.Writer) {
 			} else {
 				scope--
 				if scope < 0 {
-					fmt.Println("\nScope Error")
+					fmt.Fprintln(output, "\nScope Error.")
 					return
 				}
 			}
-		case ".":
+		case '.':
 			fmt.Fprint(output, string(memory[memoryPointer]))
-		case ",":
+		case ',':
 			if len(input) == 0 {
 				memory[memoryPointer] = 0
 			} else {
 				memory[memoryPointer] = input[0]
 				input = input[1:]
 			}
-		case "(": //Used for debugging
+		case '(': //Used for debugging
 			s := "("
 			for depth := 1; depth > 0; {
 				programPointer++
@@ -253,6 +151,6 @@ func Interpret(program []byte, input []byte, output io.Writer) {
 		programPointer++
 	}
 	if scope > 0 {
-		fmt.Fprintln(output, "\nScope Error")
+		fmt.Fprintln(output, "\nScope Error.")
 	}
 }

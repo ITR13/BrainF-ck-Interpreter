@@ -14,6 +14,7 @@ func TestInterpret(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+testLoop:
 	for i := range tests {
 		buffer := bytes.Buffer{}
 		input, err := ioutil.ReadFile(tests[i])
@@ -48,10 +49,60 @@ func TestInterpret(t *testing.T) {
 						string(bufferbytes),
 						string(output),
 					)
-					break
+					continue testLoop
 				}
 			}
 			t.Logf("Succeeded %s\n", tests[i])
 		}
+	}
+}
+
+func BenchmarkInterpret(b *testing.B) {
+	tests, err := filepath.Glob("../Tests/*.in")
+	if err != nil {
+		panic(err)
+	}
+	for i := range tests {
+		b.Run(tests[i], func(b *testing.B) {
+			buffer := bytes.Buffer{}
+			input, err := ioutil.ReadFile(tests[i])
+			if err != nil {
+				panic(err)
+			}
+			inputs := strings.SplitN(string(input), "!", 2)
+			if len(inputs) == 1 {
+				b.ResetTimer()
+				for j := 0; j < b.N; j++ {
+					Interpret(input, []byte{}, &buffer)
+				}
+			} else {
+				inputs[1] = strings.Replace(inputs[1], "!", string(0), -1)
+				b.ResetTimer()
+				for j := 0; j < b.N; j++ {
+					Interpret([]byte(inputs[0]), []byte(inputs[1]), &buffer)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkMetaInterpret(b *testing.B) {
+	interpreter, err := ioutil.ReadFile("../compiled.bf")
+	tests, err := filepath.Glob("../Tests/*.in")
+	if err != nil {
+		panic(err)
+	}
+	for i := range tests {
+		b.Run(tests[i], func(b *testing.B) {
+			buffer := bytes.Buffer{}
+			input, err := ioutil.ReadFile(tests[i])
+			if err != nil {
+				panic(err)
+			}
+			b.ResetTimer()
+			for j := 0; j < b.N; j++ {
+				Interpret(interpreter, input, &buffer)
+			}
+		})
 	}
 }
