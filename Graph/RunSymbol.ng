@@ -1,0 +1,9 @@
+Sequence
+2 Zero -1
+2 Zero -1
+Move ProgramPointer
+SR
+Add
+Up
+Switch 0 EndOfProgram '+ AddData ', ReadData '- SubData '. PrintData '< MoveDataPointerLeft '> MoveDataPointerRight '[ EnterLoop '] ExitLoop
+Move LoopBit

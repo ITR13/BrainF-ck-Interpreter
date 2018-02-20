@@ -1,0 +1,11 @@
+Sequence
+0 Zero -2
+0 Zero -2
+Move ProgramPointer
+SR
+Left
+Sub
+Left
+Up
+Switch 0 ExitLoopCount '] IncreaseLoopCounter '[ DecreaseLoopCounter
+Move LoopCount

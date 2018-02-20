@@ -1,0 +1,9 @@
+Sequence
+0 Zero 0
+0 Zero 0
+Move LoopBit
+Loop RunSymbol
+Move LoopGoal
+Left
+SetErrorIfInLoop
+Move 0

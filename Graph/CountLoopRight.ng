@@ -1,0 +1,9 @@
+Sequence
+0 Zero -2
+0 Zero -2
+Move ProgramPointer
+SR
+Add
+Up
+Switch 0 ExitLoopCountAndError '[ IncreaseLoopCounter '] DecreaseLoopCounter
+Move LoopCount

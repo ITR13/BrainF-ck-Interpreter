@@ -1,0 +1,24 @@
+Sequence
+0 Right 2
+0 Zero 2
+SZL
+Move DataPointer
+SetDataBitIfDataRight
+Down
+Down
+Down
+SZR
+Move DataPointer
+Left
+SetDataBitIfDataLeft
+Down
+Down
+Down
+SZR
+Move DataBit
+Switch 0 ScanLoopRight 1 IncreaseLoopGoal
+Move DataBit
+Clear
+Move 0
+Right
+Right
