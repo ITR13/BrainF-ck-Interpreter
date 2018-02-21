@@ -128,32 +128,31 @@ func BenchmarkCompileAndRun(b *testing.B) {
 		panic(err)
 	}
 	for i := range tests {
+		input, err := readFile(tests[i])
+		if err != nil {
+			panic(err)
+		}
+		inputs := strings.SplitN(string(input), "!", 2)
+
+		var compiled Segment
+		if len(inputs) == 1 {
+			compiled = Compile(input)
+		} else {
+			inputs[1] = strings.Replace(inputs[1], "!", string(0), -1)
+			compiled = Compile([]byte(inputs[0]))
+		}
+		compiled = Optimize(compiled)
+		var data *Data
+		if len(inputs) == 1 {
+			data = MakeData([]byte{})
+		} else {
+			data = MakeData([]byte(inputs[1]))
+		}
 		b.Run(tests[i], func(b *testing.B) {
-			input, err := readFile(tests[i])
-			if err != nil {
-				panic(err)
-			}
-			inputs := strings.SplitN(string(input), "!", 2)
-
-			var compiled Segment
-			if len(inputs) == 1 {
-				compiled = Compile(input)
-			} else {
-				inputs[1] = strings.Replace(inputs[1], "!", string(0), -1)
-				compiled = Compile([]byte(inputs[0]))
-			}
-			compiled = Optimize(compiled)
-
-			b.ResetTimer()
 			for j := 0; j < b.N; j++ {
-				b.StopTimer()
-				var data *Data
-				if len(inputs) == 1 {
-					data = MakeData([]byte{})
-				} else {
-					data = MakeData([]byte(inputs[1]))
-				}
-				b.StartTimer()
+				data.memory = make(map[int]byte, len(data.memory))
+				data.memoryPointer = 0
+				data.inputPointer = 0
 				compiled.Run(data)
 			}
 		})
@@ -169,16 +168,16 @@ func BenchmarkMetaCompileAndRun(b *testing.B) {
 		panic(err)
 	}
 	for i := range tests {
+		input, err := readFile(tests[i])
+		if err != nil {
+			panic(err)
+		}
+		data := MakeData(input)
 		b.Run(tests[i], func(b *testing.B) {
-			input, err := readFile(tests[i])
-			if err != nil {
-				panic(err)
-			}
-			b.ResetTimer()
 			for j := 0; j < b.N; j++ {
-				b.StopTimer()
-				data := MakeData(input)
-				b.StartTimer()
+				data.memory = make(map[int]byte, len(data.memory))
+				data.memoryPointer = 0
+				data.inputPointer = 0
 				compiled.Run(data)
 			}
 		})

@@ -62,26 +62,26 @@ func BenchmarkInterpret(b *testing.B) {
 		panic(err)
 	}
 	for i := range tests {
-		b.Run(tests[i], func(b *testing.B) {
-			buffer := bytes.Buffer{}
-			input, err := readFile(tests[i])
-			if err != nil {
-				panic(err)
-			}
-			inputs := strings.SplitN(string(input), "!", 2)
-			if len(inputs) == 1 {
-				b.ResetTimer()
+		buffer := bytes.Buffer{}
+		input, err := readFile(tests[i])
+		if err != nil {
+			panic(err)
+		}
+		inputs := strings.SplitN(string(input), "!", 2)
+		if len(inputs) == 1 {
+			b.Run(tests[i], func(b *testing.B) {
 				for j := 0; j < b.N; j++ {
 					Interpret(input, []byte{}, &buffer)
 				}
-			} else {
-				inputs[1] = strings.Replace(inputs[1], "!", string(0), -1)
-				b.ResetTimer()
+			})
+		} else {
+			inputs[1] = strings.Replace(inputs[1], "!", string(0), -1)
+			b.Run(tests[i], func(b *testing.B) {
 				for j := 0; j < b.N; j++ {
 					Interpret([]byte(inputs[0]), []byte(inputs[1]), &buffer)
 				}
-			}
-		})
+			})
+		}
 	}
 }
 
@@ -92,13 +92,12 @@ func BenchmarkMetaInterpret(b *testing.B) {
 		panic(err)
 	}
 	for i := range tests {
+		buffer := bytes.Buffer{}
+		input, err := readFile(tests[i])
+		if err != nil {
+			panic(err)
+		}
 		b.Run(tests[i], func(b *testing.B) {
-			buffer := bytes.Buffer{}
-			input, err := readFile(tests[i])
-			if err != nil {
-				panic(err)
-			}
-			b.ResetTimer()
 			for j := 0; j < b.N; j++ {
 				Interpret(interpreter, input, &buffer)
 			}
