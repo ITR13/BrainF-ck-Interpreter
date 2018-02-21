@@ -314,7 +314,9 @@ func test_other_quick(
 	data := MakeData(append(input, 0))
 	err := compiled.RunWithTimeout(data, quit)
 	if err != nil {
-		panic(err)
+		fmt.Printf("%s failed\n\t%s\n", name, err)
+		c <- false
+		return
 	}
 	bufferbytes := data.output.Bytes()
 	if len(bufferbytes) != len(output) {
