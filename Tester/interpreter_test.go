@@ -3,7 +3,6 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -17,11 +16,11 @@ func TestInterpret(t *testing.T) {
 testLoop:
 	for i := range tests {
 		buffer := bytes.Buffer{}
-		input, err := ioutil.ReadFile(tests[i])
+		input, err := readFile(tests[i])
 		if err != nil {
 			panic(err)
 		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
+		output, err := readFile(tests[i][:len(tests[i])-2] + "out")
 		if err != nil {
 			panic(err)
 		}
@@ -65,7 +64,7 @@ func BenchmarkInterpret(b *testing.B) {
 	for i := range tests {
 		b.Run(tests[i], func(b *testing.B) {
 			buffer := bytes.Buffer{}
-			input, err := ioutil.ReadFile(tests[i])
+			input, err := readFile(tests[i])
 			if err != nil {
 				panic(err)
 			}
@@ -87,7 +86,7 @@ func BenchmarkInterpret(b *testing.B) {
 }
 
 func BenchmarkMetaInterpret(b *testing.B) {
-	interpreter, err := ioutil.ReadFile("../compiled.bf")
+	interpreter, err := readFile("../compiled.bf")
 	tests, err := filepath.Glob("../Tests/*.in")
 	if err != nil {
 		panic(err)
@@ -95,7 +94,7 @@ func BenchmarkMetaInterpret(b *testing.B) {
 	for i := range tests {
 		b.Run(tests[i], func(b *testing.B) {
 			buffer := bytes.Buffer{}
-			input, err := ioutil.ReadFile(tests[i])
+			input, err := readFile(tests[i])
 			if err != nil {
 				panic(err)
 			}

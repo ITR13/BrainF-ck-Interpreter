@@ -12,8 +12,21 @@ func main() {
 	//test_interpreter()
 }
 
+func readFile(path string) ([]byte, error) {
+	out, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	for i := len(out) - 1; i >= 0; i-- {
+		if out[i] == 0x0D {
+			out = append(out[:i], out[i+1:]...)
+		}
+	}
+	return out, nil
+}
+
 func test_interpreter() {
-	interpreter, err := ioutil.ReadFile("../compiled.bf")
+	interpreter, err := readFile("../compiled.bf")
 	//interpreter, err := ioutil.ReadFile("../commented.bf")
 	if err != nil {
 		panic(err)
@@ -25,11 +38,11 @@ func test_interpreter() {
 testLoop:
 	for i := range tests {
 		buffer := bytes.Buffer{}
-		input, err := ioutil.ReadFile(tests[i])
+		input, err := readFile(tests[i])
 		if err != nil {
 			panic(err)
 		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
+		output, err := readFile(tests[i][:len(tests[i])-2] + "out")
 		if err != nil {
 			panic(err)
 		}
@@ -66,11 +79,11 @@ testLoop:
 metaLoop:
 	for i := range tests {
 		buffer := bytes.Buffer{}
-		input, err := ioutil.ReadFile(tests[i])
+		input, err := readFile(tests[i])
 		if err != nil {
 			panic(err)
 		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
+		output, err := readFile(tests[i][:len(tests[i])-2] + "out")
 		if err != nil {
 			panic(err)
 		}
@@ -108,7 +121,9 @@ metaLoop:
 }
 
 func test_interpreter_quick() {
-	interpreter, err := ioutil.ReadFile("../compiled.bf")
+	interpreter, err := readFile("../compiled.bf")
+	compiled := Compile(interpreter)
+	compiled = Optimize(compiled)
 	if err != nil {
 		panic(err)
 	}
@@ -118,11 +133,11 @@ func test_interpreter_quick() {
 	}
 testLoop:
 	for i := range tests {
-		input, err := ioutil.ReadFile(tests[i])
+		input, err := readFile(tests[i])
 		if err != nil {
 			panic(err)
 		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
+		output, err := readFile(tests[i][:len(tests[i])-2] + "out")
 		if err != nil {
 			panic(err)
 		}
@@ -131,8 +146,6 @@ testLoop:
 				input[i] = 0
 			}
 		}
-		compiled := Compile(interpreter)
-		compiled = Optimize(compiled)
 		data := MakeData(append(input, 0))
 		err = compiled.Run(data)
 		if err != nil {
@@ -164,11 +177,11 @@ testLoop:
 	fmt.Println("Meta Tests")
 metaLoop:
 	for i := range tests {
-		input, err := ioutil.ReadFile(tests[i])
+		input, err := readFile(tests[i])
 		if err != nil {
 			panic(err)
 		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
+		output, err := readFile(tests[i][:len(tests[i])-2] + "out")
 		if err != nil {
 			panic(err)
 		}
@@ -178,8 +191,6 @@ metaLoop:
 			}
 		}
 		interpreter = append(interpreter, 0)
-		compiled := Compile(interpreter)
-		compiled = Optimize(compiled)
 		input = append(interpreter, input...)
 		data := MakeData(append(input, 0))
 		err = compiled.Run(data)

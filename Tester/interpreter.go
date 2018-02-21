@@ -64,7 +64,7 @@ func Interpret(program []byte, input []byte, output io.Writer) {
 				}
 			}
 		case '.':
-			fmt.Fprint(output, string(memory[memoryPointer]))
+			output.Write([]byte{memory[memoryPointer]})
 		case ',':
 			if len(input) == 0 {
 				memory[memoryPointer] = 0

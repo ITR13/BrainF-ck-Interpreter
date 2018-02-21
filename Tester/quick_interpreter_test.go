@@ -2,7 +2,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -76,11 +75,11 @@ func TestCompileAndRun(t *testing.T) {
 	}
 testLoop:
 	for i := range tests {
-		input, err := ioutil.ReadFile(tests[i])
+		input, err := readFile(tests[i])
 		if err != nil {
 			panic(err)
 		}
-		output, err := ioutil.ReadFile(tests[i][:len(tests[i])-2] + "out")
+		output, err := readFile(tests[i][:len(tests[i])-2] + "out")
 		if err != nil {
 			panic(err)
 		}
@@ -130,7 +129,7 @@ func BenchmarkCompileAndRun(b *testing.B) {
 	}
 	for i := range tests {
 		b.Run(tests[i], func(b *testing.B) {
-			input, err := ioutil.ReadFile(tests[i])
+			input, err := readFile(tests[i])
 			if err != nil {
 				panic(err)
 			}
@@ -162,7 +161,7 @@ func BenchmarkCompileAndRun(b *testing.B) {
 }
 
 func BenchmarkMetaCompileAndRun(b *testing.B) {
-	interpreter, err := ioutil.ReadFile("../compiled.bf")
+	interpreter, err := readFile("../compiled.bf")
 	compiled := Compile(interpreter)
 	compiled = Optimize(compiled)
 	tests, err := filepath.Glob("../Tests/*.in")
@@ -171,7 +170,7 @@ func BenchmarkMetaCompileAndRun(b *testing.B) {
 	}
 	for i := range tests {
 		b.Run(tests[i], func(b *testing.B) {
-			input, err := ioutil.ReadFile(tests[i])
+			input, err := readFile(tests[i])
 			if err != nil {
 				panic(err)
 			}
