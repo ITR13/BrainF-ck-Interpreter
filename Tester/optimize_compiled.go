@@ -9,6 +9,23 @@ type MultiplierSegment struct {
 	next            Segment
 }
 
+func (ms *MultiplierSegment) Run(data *Data) error {
+	c := data.memory[data.memoryPointer]
+	if c != 0 {
+		if c%ms.danger != 0 {
+			return fmt.Errorf("Infinite Loop")
+		}
+		multiplier := -c * ms.inverse / ms.danger
+		for i := range ms.operations {
+			data.memory[data.memoryPointer+
+				ms.operations[i].offset] += ms.operations[i].value * multiplier
+		}
+	}
+	if ms.next != nil {
+		return ms.next.Run(data)
+	}
+	return nil
+}
 func (ms *MultiplierSegment) AddNext(s Segment) Segment {
 	if ms.next != nil {
 		ms.next = ms.AddNext(s)
@@ -17,7 +34,10 @@ func (ms *MultiplierSegment) AddNext(s Segment) Segment {
 	}
 	return ms
 }
-func (ms *MultiplierSegment) Run(data *Data) error {
+func (ms *MultiplierSegment) RunWithTimeout(data *Data, quit *bool) error {
+	if *quit {
+		return fmt.Errorf("Ran too long")
+	}
 	c := data.memory[data.memoryPointer]
 	if c != 0 {
 		if c%ms.danger != 0 {

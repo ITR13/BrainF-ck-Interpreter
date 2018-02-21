@@ -19,6 +19,7 @@ type Operation struct {
 }
 type Segment interface {
 	Run(data *Data) error
+	RunWithTimeout(data *Data, quit *bool) error
 	AddNext(nextSegment Segment) Segment
 }
 
@@ -38,6 +39,9 @@ func (ss *StartSegment) AddNext(s Segment) Segment {
 	return s
 }
 func (ss *StartSegment) Run(*Data) error {
+	return nil
+}
+func (ss *StartSegment) RunWithTimeout(*Data, *bool) error {
 	return nil
 }
 
@@ -77,6 +81,30 @@ func (ss *SimpleSegment) AddNext(s Segment) Segment {
 	}
 	return ss
 }
+func (ss *SimpleSegment) RunWithTimeout(data *Data, quit *bool) error {
+	if *quit {
+		return fmt.Errorf("Ran too long")
+	}
+	for i := range ss.prints {
+		err := data.output.WriteByte(
+			data.memory[data.memoryPointer+
+				ss.prints[i].offset] +
+				ss.prints[i].value,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	for i := range ss.operations {
+		data.memory[data.memoryPointer+
+			ss.operations[i].offset] += ss.operations[i].value
+	}
+	data.memoryPointer += ss.offset
+	if ss.next != nil {
+		return ss.next.Run(data)
+	}
+	return nil
+}
 
 type ScopeError struct{}
 
@@ -86,6 +114,10 @@ func (se *ScopeError) Run(data *Data) error {
 }
 func (se *ScopeError) AddNext(Segment) Segment {
 	return se
+}
+func (se *ScopeError) RunWithTimeout(data *Data, quit *bool) error {
+	fmt.Fprintln(data.output, "\nScope Error.")
+	return nil
 }
 
 type LoopSegment struct {
@@ -112,7 +144,6 @@ func (ls *LoopSegment) Run(data *Data) error {
 	}
 	return nil
 }
-
 func (ls *LoopSegment) AddNext(s Segment) Segment {
 	if ls.next != nil {
 		ls.next = ls.next.AddNext(s)
@@ -121,11 +152,44 @@ func (ls *LoopSegment) AddNext(s Segment) Segment {
 	}
 	return ls
 }
+func (ls *LoopSegment) RunWithTimeout(data *Data, quit *bool) error {
+	b := data.memory[data.memoryPointer]
+	if b != 0 && !*quit {
+		if ls.inner == nil || b%ls.danger != 0 {
+			return fmt.Errorf("Infinite Loop")
+		}
+		for data.memory[data.memoryPointer] != 0 {
+			err := ls.inner.Run(data)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if ls.next != nil {
+		if *quit {
+			return fmt.Errorf("Ran too long")
+		}
+		return ls.next.Run(data)
+	}
+	return nil
+}
 
 type ReadSegment struct {
 	next Segment
 }
 
+func (ss *ReadSegment) Run(data *Data) error {
+	if data.inputPointer < len(data.input) {
+		data.memory[data.memoryPointer] = data.input[data.inputPointer]
+		data.inputPointer++
+	} else {
+		data.memory[data.memoryPointer] = 0
+	}
+	if ss.next != nil {
+		return ss.next.Run(data)
+	}
+	return nil
+}
 func (ss *ReadSegment) AddNext(s Segment) Segment {
 	if ss.next != nil {
 		ss.next = ss.next.AddNext(s)
@@ -134,7 +198,10 @@ func (ss *ReadSegment) AddNext(s Segment) Segment {
 	}
 	return ss
 }
-func (ss *ReadSegment) Run(data *Data) error {
+func (ss *ReadSegment) RunWithTimeout(data *Data, quit *bool) error {
+	if *quit {
+		return fmt.Errorf("Ran too long")
+	}
 	if data.inputPointer < len(data.input) {
 		data.memory[data.memoryPointer] = data.input[data.inputPointer]
 		data.inputPointer++
