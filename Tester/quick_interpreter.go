@@ -101,7 +101,7 @@ func (ss *SimpleSegment) RunWithTimeout(data *Data, quit *bool) error {
 	}
 	data.memoryPointer += ss.offset
 	if ss.next != nil {
-		return ss.next.Run(data)
+		return ss.next.RunWithTimeout(data, quit)
 	}
 	return nil
 }
@@ -159,7 +159,7 @@ func (ls *LoopSegment) RunWithTimeout(data *Data, quit *bool) error {
 			return fmt.Errorf("Infinite Loop")
 		}
 		for data.memory[data.memoryPointer] != 0 {
-			err := ls.inner.Run(data)
+			err := ls.inner.RunWithTimeout(data, quit)
 			if err != nil {
 				return err
 			}
@@ -169,7 +169,7 @@ func (ls *LoopSegment) RunWithTimeout(data *Data, quit *bool) error {
 		if *quit {
 			return fmt.Errorf("Ran too long")
 		}
-		return ls.next.Run(data)
+		return ls.next.RunWithTimeout(data, quit)
 	}
 	return nil
 }
@@ -209,7 +209,7 @@ func (ss *ReadSegment) RunWithTimeout(data *Data, quit *bool) error {
 		data.memory[data.memoryPointer] = 0
 	}
 	if ss.next != nil {
-		return ss.next.Run(data)
+		return ss.next.RunWithTimeout(data, quit)
 	}
 	return nil
 }

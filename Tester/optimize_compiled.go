@@ -50,7 +50,7 @@ func (ms *MultiplierSegment) RunWithTimeout(data *Data, quit *bool) error {
 		}
 	}
 	if ms.next != nil {
-		return ms.next.Run(data)
+		return ms.next.RunWithTimeout(data, quit)
 	}
 	return nil
 }
