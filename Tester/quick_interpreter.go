@@ -44,10 +44,21 @@ func (ss *StartSegment) Run(*Data) error {
 type SimpleSegment struct {
 	offset     int
 	operations []Operation
+	prints     []Operation
 	next       Segment
 }
 
 func (ss *SimpleSegment) Run(data *Data) error {
+	for i := range ss.prints {
+		err := data.output.WriteByte(
+			data.memory[data.memoryPointer+
+				ss.prints[i].offset] +
+				ss.prints[i].value,
+		)
+		if err != nil {
+			return err
+		}
+	}
 	for i := range ss.operations {
 		data.memory[data.memoryPointer+
 			ss.operations[i].offset] += ss.operations[i].value
@@ -78,18 +89,22 @@ func (se *ScopeError) AddNext(Segment) Segment {
 }
 
 type LoopSegment struct {
-	inner Segment
-	next  Segment
+	danger byte //If a number isn't modulo this, then it will infinite loop
+	inner  Segment
+	next   Segment
 }
 
 func (ls *LoopSegment) Run(data *Data) error {
-	for data.memory[data.memoryPointer] != 0 {
-		if ls.inner == nil {
+	b := data.memory[data.memoryPointer]
+	if b != 0 {
+		if ls.inner == nil || b%ls.danger != 0 {
 			return fmt.Errorf("Infinite Loop")
 		}
-		err := ls.inner.Run(data)
-		if err != nil {
-			return err
+		for data.memory[data.memoryPointer] != 0 {
+			err := ls.inner.Run(data)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if ls.next != nil {
@@ -97,6 +112,7 @@ func (ls *LoopSegment) Run(data *Data) error {
 	}
 	return nil
 }
+
 func (ls *LoopSegment) AddNext(s Segment) Segment {
 	if ls.next != nil {
 		ls.next = ls.next.AddNext(s)
@@ -106,12 +122,11 @@ func (ls *LoopSegment) AddNext(s Segment) Segment {
 	return ls
 }
 
-type IOSegment struct {
-	read bool
+type ReadSegment struct {
 	next Segment
 }
 
-func (ss *IOSegment) AddNext(s Segment) Segment {
+func (ss *ReadSegment) AddNext(s Segment) Segment {
 	if ss.next != nil {
 		ss.next = ss.next.AddNext(s)
 	} else {
@@ -119,19 +134,12 @@ func (ss *IOSegment) AddNext(s Segment) Segment {
 	}
 	return ss
 }
-func (ss *IOSegment) Run(data *Data) error {
-	if ss.read {
-		if data.inputPointer < len(data.input) {
-			data.memory[data.memoryPointer] = data.input[data.inputPointer]
-			data.inputPointer++
-		} else {
-			data.memory[data.memoryPointer] = 0
-		}
+func (ss *ReadSegment) Run(data *Data) error {
+	if data.inputPointer < len(data.input) {
+		data.memory[data.memoryPointer] = data.input[data.inputPointer]
+		data.inputPointer++
 	} else {
-		err := data.output.WriteByte(data.memory[data.memoryPointer])
-		if err != nil {
-			return err
-		}
+		data.memory[data.memoryPointer] = 0
 	}
 	if ss.next != nil {
 		return ss.next.Run(data)
@@ -144,13 +152,7 @@ func Compile(program []byte) Segment {
 	start = &StartSegment{}
 	for i := 0; i < len(program); i++ {
 		switch program[i] {
-		case '>':
-			fallthrough
-		case '<':
-			fallthrough
-		case '+':
-			fallthrough
-		case '-':
+		case '<', '>', '+', '-', '.':
 			simple, offset := CreateSimpleSegment(program, i)
 			start = start.AddNext(simple)
 			i += offset
@@ -161,9 +163,7 @@ func Compile(program []byte) Segment {
 		case ']':
 			start = start.AddNext(&ScopeError{})
 		case ',':
-			start = start.AddNext(&IOSegment{true, nil})
-		case '.':
-			start = start.AddNext(&IOSegment{false, nil})
+			start = start.AddNext(&ReadSegment{nil})
 		}
 	}
 	return start
@@ -176,7 +176,7 @@ func CreateSimpleSegment(
 	programOffset := 0
 	dataOffset := 0
 	changes := make(map[int]byte, 0)
-
+	prints := make([]Operation, 0)
 simpleLoop:
 	for i := programPointer; i < len(program); i++ {
 		switch program[i] {
@@ -188,13 +188,9 @@ simpleLoop:
 			dataOffset++
 		case '<':
 			dataOffset--
-		case '[':
-			break simpleLoop
-		case ']':
-			break simpleLoop
 		case '.':
-			break simpleLoop
-		case ',':
+			prints = append(prints, Operation{dataOffset, changes[dataOffset]})
+		case '[', ']', ',':
 			break simpleLoop
 		}
 		programOffset++
@@ -211,6 +207,7 @@ simpleLoop:
 	return &SimpleSegment{
 		dataOffset,
 		operations,
+		prints,
 		nil,
 	}, programOffset - 1
 }
@@ -238,6 +235,7 @@ func CreateLoopSegment(
 		next = &ScopeError{}
 	}
 	return &LoopSegment{
+		1,
 		Compile(program[programPointer+1 : programPointer+length]),
 		next,
 	}, length

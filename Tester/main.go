@@ -132,6 +132,7 @@ testLoop:
 			}
 		}
 		compiled := Compile(interpreter)
+		compiled = Optimize(compiled)
 		data := MakeData(append(input, 0))
 		err = compiled.Run(data)
 		if err != nil {
@@ -178,6 +179,7 @@ metaLoop:
 		}
 		interpreter = append(interpreter, 0)
 		compiled := Compile(interpreter)
+		compiled = Optimize(compiled)
 		input = append(interpreter, input...)
 		data := MakeData(append(input, 0))
 		err = compiled.Run(data)

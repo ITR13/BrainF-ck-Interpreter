@@ -12,7 +12,13 @@ func TestRun(t *testing.T) {
 	simpleA := &SimpleSegment{
 		0,
 		[]Operation{{0, 'A'}},
-		&IOSegment{false, nil},
+		[]Operation{},
+		&SimpleSegment{
+			0,
+			[]Operation{},
+			[]Operation{{0, 0}},
+			nil,
+		},
 	}
 	data := MakeData([]byte{})
 	simpleA.Run(data)
@@ -28,14 +34,17 @@ func TestRun(t *testing.T) {
 			outputbytes[0], 'A',
 		)
 	}
-
 	simpleloop := &SimpleSegment{
 		0,
 		[]Operation{{0, 1}},
+		[]Operation{},
 		&LoopSegment{
-			&IOSegment{
-				false,
-				&SimpleSegment{0, []Operation{{0, 1}}, nil},
+			1,
+			&SimpleSegment{
+				0,
+				[]Operation{{0, 1}},
+				[]Operation{{0, 0}},
+				nil,
 			},
 			nil,
 		},
@@ -60,7 +69,6 @@ func TestRun(t *testing.T) {
 		}
 	}
 }
-
 func TestCompileAndRun(t *testing.T) {
 	tests, err := filepath.Glob("../Tests/*.in")
 	if err != nil {
@@ -87,6 +95,7 @@ testLoop:
 			compiled = Compile([]byte(inputs[0]))
 			data = MakeData([]byte(inputs[1]))
 		}
+		compiled = Optimize(compiled)
 		compiled.Run(data)
 		bufferbytes := data.output.Bytes()
 		//t.Log(compiled)
@@ -134,6 +143,7 @@ func BenchmarkCompileAndRun(b *testing.B) {
 				inputs[1] = strings.Replace(inputs[1], "!", string(0), -1)
 				compiled = Compile([]byte(inputs[0]))
 			}
+			compiled = Optimize(compiled)
 
 			b.ResetTimer()
 			for j := 0; j < b.N; j++ {
@@ -154,6 +164,7 @@ func BenchmarkCompileAndRun(b *testing.B) {
 func BenchmarkMetaCompileAndRun(b *testing.B) {
 	interpreter, err := ioutil.ReadFile("../compiled.bf")
 	compiled := Compile(interpreter)
+	compiled = Optimize(compiled)
 	tests, err := filepath.Glob("../Tests/*.in")
 	if err != nil {
 		panic(err)
