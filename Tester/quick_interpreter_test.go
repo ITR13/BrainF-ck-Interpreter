@@ -161,6 +161,9 @@ func BenchmarkCompileAndRun(b *testing.B) {
 
 func BenchmarkMetaCompileAndRun(b *testing.B) {
 	interpreter, err := readFile("../compiled.bf")
+	if err != nil {
+		panic(err)
+	}
 	compiled := Compile(interpreter)
 	compiled = Optimize(compiled)
 	tests, err := filepath.Glob("../Tests/*.in")

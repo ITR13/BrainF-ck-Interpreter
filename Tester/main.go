@@ -76,6 +76,7 @@ testLoop:
 		}
 	}
 	fmt.Println("Meta Tests")
+	interpreter = append(interpreter, 0)
 metaLoop:
 	for i := range tests {
 		buffer := bytes.Buffer{}
@@ -92,7 +93,6 @@ metaLoop:
 				input[i] = 0
 			}
 		}
-		interpreter = append(interpreter, 0)
 		input = append(interpreter, input...)
 		Interpret(interpreter, append(input, 0), &buffer)
 		bufferbytes := buffer.Bytes()
@@ -122,11 +122,11 @@ metaLoop:
 
 func test_interpreter_quick() {
 	interpreter, err := readFile("../compiled.bf")
-	compiled := Compile(interpreter)
-	compiled = Optimize(compiled)
 	if err != nil {
 		panic(err)
 	}
+	compiled := Compile(interpreter)
+	compiled = Optimize(compiled)
 	tests, err := filepath.Glob("../Tests/*.in")
 	if err != nil {
 		panic(err)
@@ -175,6 +175,7 @@ testLoop:
 		}
 	}
 	fmt.Println("Meta Tests")
+	interpreter = append(interpreter, 0)
 metaLoop:
 	for i := range tests {
 		input, err := readFile(tests[i])
@@ -190,7 +191,6 @@ metaLoop:
 				input[i] = 0
 			}
 		}
-		interpreter = append(interpreter, 0)
 		input = append(interpreter, input...)
 		data := MakeData(append(input, 0))
 		err = compiled.Run(data)
