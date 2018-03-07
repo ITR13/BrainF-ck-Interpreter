@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	test_interpreter_quick(false)
+	//test_interpreter_quick(false)
 	//test_interpreter(false)
 	test_all_others()
 }
@@ -272,7 +272,7 @@ func test_all_others() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("Testing %s\n", tests[i])
+		fmt.Printf("----------------\nTesting %s\n----------------\n", tests[i])
 		quit := false
 		for j := range compileds {
 			sepInput := make([]byte, len(input))
@@ -288,7 +288,7 @@ func test_all_others() {
 			)
 		}
 		go func() {
-			time.Sleep(time.Minute * 10)
+			time.Sleep(time.Minute * 5)
 			quit = true
 		}()
 		for _ = range compileds {

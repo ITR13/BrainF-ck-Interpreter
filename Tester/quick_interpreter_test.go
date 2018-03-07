@@ -95,9 +95,77 @@ testLoop:
 			data = MakeData([]byte(inputs[1]))
 		}
 		compiled = Optimize(compiled)
-		compiled.Run(data)
+		err = compiled.Run(data)
+		if err != nil {
+			t.Errorf(
+				"Failed %s\n\t(got error \"%s\")\n",
+				tests[i],
+				err,
+			)
+			continue testLoop
+		}
 		bufferbytes := data.output.Bytes()
-		//t.Log(compiled)
+		if len(bufferbytes) != len(output) {
+			t.Errorf(
+				"Failed %s\n\t(got \"%s\", wanted \"%s\")\n",
+				tests[i],
+				string(bufferbytes),
+				string(output),
+			)
+		} else {
+			for j := range bufferbytes {
+				if bufferbytes[j] != output[j] {
+					t.Errorf(
+						"Failed %s\n\t(got \"%s\", wanted \"%s\")\n",
+						tests[i],
+						string(bufferbytes),
+						string(output),
+					)
+					continue testLoop
+				}
+			}
+			t.Logf("Succeeded %s\n", tests[i])
+		}
+	}
+}
+func TestCompileAndRunWithTimeout(t *testing.T) {
+	tests, err := filepath.Glob("../Tests/*.in")
+	if err != nil {
+		panic(err)
+	}
+testLoop:
+	for i := range tests {
+		input, err := readFile(tests[i])
+		if err != nil {
+			panic(err)
+		}
+		output, err := readFile(tests[i][:len(tests[i])-2] + "out")
+		if err != nil {
+			panic(err)
+		}
+		inputs := strings.SplitN(string(input), "!", 2)
+		var data *Data
+		var compiled Segment
+		if len(inputs) == 1 {
+			compiled = Compile(input)
+			data = MakeData([]byte{})
+		} else {
+			inputs[1] = strings.Replace(inputs[1], "!", string(0), -1)
+			compiled = Compile([]byte(inputs[0]))
+			data = MakeData([]byte(inputs[1]))
+		}
+		compiled = Optimize(compiled)
+		var timeout bool
+		err = compiled.RunWithTimeout(data, &timeout)
+		if err != nil {
+			t.Errorf(
+				"Failed %s\n\t(got error \"%s\")\n",
+				tests[i],
+				err,
+			)
+			continue testLoop
+		}
+		bufferbytes := data.output.Bytes()
 		if len(bufferbytes) != len(output) {
 			t.Errorf(
 				"Failed %s\n\t(got \"%s\", wanted \"%s\")\n",

@@ -183,7 +183,7 @@ func (ss *ReadSegment) Run(data *Data) error {
 		data.memory[data.memoryPointer] = data.input[data.inputPointer]
 		data.inputPointer++
 	} else {
-		data.memory[data.memoryPointer] = 0
+		return fmt.Errorf("Read too many characters")
 	}
 	if ss.next != nil {
 		return ss.next.Run(data)
@@ -206,7 +206,7 @@ func (ss *ReadSegment) RunWithTimeout(data *Data, quit *bool) error {
 		data.memory[data.memoryPointer] = data.input[data.inputPointer]
 		data.inputPointer++
 	} else {
-		data.memory[data.memoryPointer] = 0
+		return fmt.Errorf("Read too many characters")
 	}
 	if ss.next != nil {
 		return ss.next.RunWithTimeout(data, quit)
