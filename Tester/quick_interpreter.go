@@ -45,6 +45,10 @@ func (ss *StartSegment) RunWithTimeout(*Data, *bool) error {
 	return nil
 }
 
+var (
+	MaxMemoryAllocated int = 100000000
+)
+
 type SimpleSegment struct {
 	offset     int
 	operations []Operation
@@ -66,6 +70,9 @@ func (ss *SimpleSegment) Run(data *Data) error {
 	for i := range ss.operations {
 		data.memory[data.memoryPointer+
 			ss.operations[i].offset] += ss.operations[i].value
+	}
+	if len(data.memory) > MaxMemoryAllocated {
+		return fmt.Errorf("Too much memory allocated")
 	}
 	data.memoryPointer += ss.offset
 	if ss.next != nil {
@@ -98,6 +105,9 @@ func (ss *SimpleSegment) RunWithTimeout(data *Data, quit *bool) error {
 	for i := range ss.operations {
 		data.memory[data.memoryPointer+
 			ss.operations[i].offset] += ss.operations[i].value
+	}
+	if len(data.memory) > MaxMemoryAllocated {
+		return fmt.Errorf("Too much memory allocated")
 	}
 	data.memoryPointer += ss.offset
 	if ss.next != nil {

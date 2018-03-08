@@ -288,7 +288,7 @@ func test_all_others() {
 			)
 		}
 		go func() {
-			time.Sleep(time.Minute * 5)
+			time.Sleep(time.Minute * 15)
 			quit = true
 		}()
 		for _ = range compileds {
