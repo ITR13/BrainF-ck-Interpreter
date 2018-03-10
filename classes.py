@@ -170,15 +170,13 @@ class Switch(Graph):
 		for i,j in zip(self.keys,self.values):
 			run = run + (
 				#Decrease to value we want to test, and set unset bit
-				#Also set helper bit to help with aligning
-				f'{"-"*((i-prev)%256)}{right}+{right*2}+{left*3}'
-				#If not zero, set unset bit to zero, then move right
-				# twice, so that if zero is on the empty bit, and
-				# if not zero is on the helper bit. Then scan left so
-				# that if not zero lands on the empty bit and if zero
-				# stands still. Then move right and unset the helper
-				# bit and move left twice to land on the unset bit
-				f'[{right}-]{right*2}[{left}]{right}-{left*2}'
+				f'{"-"*((i-prev)%256)}{right}+{left}'
+				#If not zero, set unset bit to zero, then move right,
+				# so that if zero is on the unset bit, and if not zero
+				# is on the empty bit. Then scan right so that if not 
+				# zero lands on the empty bit and if zero stands still. 
+				#Then move left to put both on the unset-bit
+				f'[{right}-]{right}[{right}]{left}'
 				#If the unset bit has not been set then run the
 				# corresponding program. Move one left to be back on
 				# the counter
