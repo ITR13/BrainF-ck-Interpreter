@@ -86,7 +86,7 @@ func BenchmarkInterpret(b *testing.B) {
 }
 
 func BenchmarkMetaInterpret(b *testing.B) {
-	interpreter, err := readFile("../compiled.bf")
+	interpreter, err := readFile("../shortened.bf")
 	tests, err := filepath.Glob("../Tests/*.in")
 	if err != nil {
 		panic(err)

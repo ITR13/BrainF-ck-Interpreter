@@ -228,7 +228,7 @@ func BenchmarkCompileAndRun(b *testing.B) {
 }
 
 func BenchmarkMetaCompileAndRun(b *testing.B) {
-	interpreter, err := readFile("../compiled.bf")
+	interpreter, err := readFile("../shortened.bf")
 	if err != nil {
 		panic(err)
 	}

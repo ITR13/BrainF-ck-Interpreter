@@ -28,8 +28,7 @@ func readFile(path string) ([]byte, error) {
 }
 
 func test_interpreter(testmeta bool) {
-	interpreter, err := readFile("../compiled.bf")
-	//interpreter, err := ioutil.ReadFile("../commented.bf")
+	interpreter, err := readFile("../shortened.bf")
 	if err != nil {
 		panic(err)
 	}
@@ -126,7 +125,7 @@ metaLoop:
 }
 
 func test_interpreter_quick(testmeta bool) {
-	interpreter, err := readFile("../compiled.bf")
+	interpreter, err := readFile("../shortened.bf")
 	if err != nil {
 		panic(err)
 	}
