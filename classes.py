@@ -171,8 +171,9 @@ class Switch(Graph):
 			ydiff = (i-prev)%256
 			ychar = "-"
 			if ydiff>128:
-				ydiff = 255-ydiff
+				ydiff = (-ydiff)%256
 				ychar = "+"
+				print("warning: switch not optimized")
 				
 			run = run + (
 				#Decrease to value we want to test, and set unset bit

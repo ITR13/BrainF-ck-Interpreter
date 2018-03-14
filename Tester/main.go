@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	//test_interpreter_quick(false)
+	test_interpreter_quick(false)
 	//test_interpreter(false)
-	test_all_others()
+	//test_all_others()
 }
 
 func readFile(path string) ([]byte, error) {
