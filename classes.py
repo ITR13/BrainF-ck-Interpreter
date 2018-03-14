@@ -168,9 +168,15 @@ class Switch(Graph):
 		run = ""
 		prev = 0
 		for i,j in zip(self.keys,self.values):
+			ydiff = (i-prev)%256
+			ychar = "-"
+			if ydiff>128:
+				ydiff = 255-ydiff
+				ychar = "+"
+				
 			run = run + (
 				#Decrease to value we want to test, and set unset bit
-				f'{"-"*((i-prev)%256)}{right}+{left}'
+				f'{ychar*ydiff}{right}+{left}'
 				#If not zero, set unset bit to zero, then move right,
 				# so that if zero is on the unset bit, and if not zero
 				# is on the empty bit. Then scan right so that if not 
